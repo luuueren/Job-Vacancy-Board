@@ -304,22 +304,14 @@
 
 
             if (successMessage) {
-
                 successMessage.classList.add('opacity-0');
-
-
                 setTimeout(() => {
-
                     successMessage.remove();
-
                 }, 500);
 
             }
 
         }
-
-
-
         setTimeout(() => {
 
             closeSuccessMessage();
