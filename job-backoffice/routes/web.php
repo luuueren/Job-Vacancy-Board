@@ -38,16 +38,20 @@ Route::middleware('auth')->group(function () {
 
 
     // Job Categories
-    Route::resource('job-categories', JobCategoryController::class)
-        ->names([
-            'index' => 'category.index',
-            'create' => 'category.create',
-            'store' => 'category.store',
-            'show' => 'category.show',
-            'edit' => 'category.edit',
-            'update' => 'category.update',
-            'destroy' => 'category.destroy',
-        ]);
+Route::resource('job-categories', JobCategoryController::class)
+    ->names([
+        'index' => 'category.index',
+        'create' => 'category.create',
+        'store' => 'category.store',
+        'show' => 'category.show',
+        'edit' => 'category.edit',
+        'update' => 'category.update',
+        'destroy' => 'category.destroy',
+    ]);
+
+// Restore archived category
+Route::put('job-categories/{id}/restore', [JobCategoryController::class, 'restore'])
+    ->name('category.restore');
 
 
     // Job Vacancies
