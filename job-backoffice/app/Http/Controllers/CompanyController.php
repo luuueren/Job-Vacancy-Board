@@ -10,11 +10,27 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use Illuminate\Support\Facades\Hash;
 
+
+
+
 class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+
+    public $industries = [
+            'Technology',
+            'Finance',
+            'Healthcare',
+            'Education',
+            'Retail',
+            'Manufacturing',
+            'Hospitality',
+            'Transportation',
+            'Energy',
+            'Telecommunications',
+        ];
        public function index(Request $request)
     {
         $query = Company::query();
@@ -38,19 +54,10 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        $industries = [
-            'Technology',
-            'Finance',
-            'Healthcare',
-            'Education',
-            'Retail',
-            'Manufacturing',
-            'Hospitality',
-            'Transportation',
-            'Energy',
-            'Telecommunications',
-        ];
-        return view('company.create', compact('industries'));
+
+        return view('company.create', [
+            'industries' => $this->industries,
+        ]);
     }
 
     /**
@@ -107,26 +114,44 @@ class CompanyController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
-    {
-        $company = Company::findOrFail($id);
+   public function edit(string $id)
+{
+    $company = Company::findOrFail($id);
 
-        return view('company.edit', compact('company'));
-    }
+    return view('company.edit', [
+        'company' => $company,
+        'industries' => $this->industries,
+    ]);
+}
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(CompanyUpdateRequest $request, string $id)
-    {
-        $company = Company::findOrFail($id);
+   public function update(CompanyUpdateRequest $request, string $id)
+{
+    $company = Company::findOrFail($id);
 
-        $company->update($request->validated());
+    $validated = $request->validated();
 
-        return redirect()
-            ->route('company.index')
-            ->with('success', 'Company updated successfully.');
+    // Update company information
+    $company->update([
+        'name' => $validated['name'],
+        'address' => $validated['address'],
+        'industry' => $validated['industry'],
+        'website' => $validated['website'] ?? null,
+    ]);
+
+    // Update owner name only
+    if ($company->owner) {
+        $company->owner->update([
+            'name' => $validated['owner_name'],
+        ]);
     }
+
+    return redirect()
+        ->route('company.index')
+        ->with('success', 'Company updated successfully.');
+}
 
     /**
      * Archive the specified resource.
