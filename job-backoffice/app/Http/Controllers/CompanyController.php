@@ -2,16 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CompanyCreateRequest;
+use App\Http\Requests\CompanyUpdateRequest;
+use App\Models\JobApplication;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Company;
+use Illuminate\Support\Facades\Hash;
 
 class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+       public function index(Request $request)
     {
-        return view('company.index');
+        $query = Company::query();
+
+        // Show archived companies only
+        if ($request->boolean('archived')) {
+            $query->onlyTrashed();
+        } else {
+            $query->latest();
+        }
+
+        $companies = $query
+            ->paginate(10)
+            ->onEachSide(1);
+
+        return view('company.index', compact('companies'));
     }
 
     /**
@@ -19,46 +38,122 @@ class CompanyController extends Controller
      */
     public function create()
     {
-        //
+        $industries = [
+            'Technology',
+            'Finance',
+            'Healthcare',
+            'Education',
+            'Retail',
+            'Manufacturing',
+            'Hospitality',
+            'Transportation',
+            'Energy',
+            'Telecommunications',
+        ];
+        return view('company.create', compact('industries'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CompanyCreateRequest $request)
     {
-        //
+    $validatedData = $request->validated();
+
+    // create owner user
+    $owner = User::create([
+        'name' => $validatedData['owner_name'],
+        'email' => $validatedData['owner_email'],
+        'password' => Hash::make($validatedData['owner_password']),
+        'role' => 'company-owner', // Assuming you have a role field to differentiate user types
+    ]);
+
+    // return error if owner creation fails
+    if (!$owner) {
+        return redirect()
+            ->back()
+            ->withInput()
+            ->withErrors(['owner_creation' => 'Failed to create company owner. Please try again.']);
+    }
+
+        // create the company
+        $company = Company::create([
+            'name' => $validatedData['name'],
+            'address' => $validatedData['address'],
+            'industry' => $validatedData['industry'],
+            'website' => $validatedData['website'] ?? null,
+            'ownerId' => $owner->id,
+        ]);
+
+        return redirect()
+            ->route('company.index')
+            ->with('success', 'Company created successfully.');
+
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        //
-    }
+   public function show(string $id)
+{
+    $company = Company::findOrFail($id);
 
+    $applications = JobApplication::with(['user', 'jobVacancy'])
+        ->whereIn('jobVacancyId', $company->jobVacancies->pluck('id'))
+        ->get();
+
+    return view('company.show', compact('company', 'applications'));
+}
     /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
     {
-        //
+        $company = Company::findOrFail($id);
+
+        return view('company.edit', compact('company'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CompanyUpdateRequest $request, string $id)
     {
-        //
+        $company = Company::findOrFail($id);
+
+        $company->update($request->validated());
+
+        return redirect()
+            ->route('company.index')
+            ->with('success', 'Company updated successfully.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Archive the specified resource.
      */
     public function destroy(string $id)
     {
-        //
+        $company = Company::findOrFail($id);
+
+        $company->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', 'Company archived successfully.');
     }
+
+    /**
+     * Restore the specified resource from archive.
+     */
+  public function restore(string $id)
+{
+    $company = Company::onlyTrashed()->findOrFail($id);
+
+    $company->restore();
+
+    return redirect()
+        ->route('company.index', ['archived' => true])
+        ->with('success', 'Company restored successfully.');
+}
+
 }

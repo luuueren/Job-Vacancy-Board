@@ -41,8 +41,9 @@ class JobApplication extends Model
     {
         return $this->belongsTo(Resume::class, "resumeId", "id");
     }
-    public function jobVacancies()
-    {
-        return $this->belongsTo(JobVacancy::class, "jobVacancyId", "id");
-    }
+    public function jobVacancy()
+{
+    return $this->belongsTo(JobVacancy::class, 'jobVacancyId', 'id');
+}
+
 }
