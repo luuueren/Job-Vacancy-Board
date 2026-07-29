@@ -90,10 +90,16 @@
                         <tr class="transition hover:bg-gray-50">
 
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <a href="{{ route('company.show', $company->id) }}"
-                                    class="text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-800 hover:underline">
-                                    {{ $company->name }}
-                                </a>
+                                @if (request()->input('archived'))
+                                    <span class="text-sm text-gray-500">
+                                        {{ $company->name }}
+                                    </span>
+                                @else
+                                    <a href="{{ route('company.show', $company->id) }}"
+                                        class="text-sm font-semibold text-indigo-600 transition-colors duration-200 hover:text-indigo-800 hover:underline">
+                                        {{ $company->name }}
+                                    </a>
+                                @endif
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">

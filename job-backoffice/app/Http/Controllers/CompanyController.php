@@ -163,7 +163,7 @@ class CompanyController extends Controller
         $company->delete();
 
         return redirect()
-            ->back()
+            ->route('company.index')
             ->with('success', 'Company archived successfully.');
     }
 
