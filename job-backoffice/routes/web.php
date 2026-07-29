@@ -29,6 +29,9 @@ Route::middleware('auth')->group(function () {
             'destroy' => 'company.destroy',
         ]);
 
+    Route::put('/companies/{id}/restore', [CompanyController::class, 'restore'])
+        ->name('company.restore');
+
 
     // Job Applications
     Route::get('/job-applications', [
