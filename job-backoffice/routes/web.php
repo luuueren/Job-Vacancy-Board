@@ -69,6 +69,10 @@ Route::put('job-categories/{id}/restore', [JobCategoryController::class, 'restor
             'destroy' => 'job-vacancy.destroy',
         ]);
 
+    Route::put('/job-vacancies/{id}/restore', [JobVacancyController::class, 'restore'])
+        ->name('job-vacancy.restore');
+
+
 
     // Users
     Route::resource('users', UserController::class)
