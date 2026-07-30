@@ -129,13 +129,16 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 // create job applications
-                JobApplication::create([
-                    'jobVacancyId' => $jobVacancy->id,
-                    'userId' => $jobSeeker->id,
-                    'resumeId' => $resume->id,
-                    'aiGeneratedScore' => $application['aiGeneratedScore'],
-                    'aiGeneratedFeedback' => $application['aiGeneratedFeedback'],
-                ]);
+            JobApplication::create([
+                'jobVacancyId' => $jobVacancy->id,
+                'userId' => $jobSeeker->id,
+                'resumeId' => $resume->id,
+
+                'status' => $application['status'],
+
+                'aiGeneratedScore' => $application['aiGeneratedScore'],
+                'aiGeneratedFeedback' => $application['aiGeneratedFeedback'],
+            ]);
 
 
 

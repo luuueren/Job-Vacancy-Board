@@ -33,11 +33,20 @@ Route::middleware('auth')->group(function () {
         ->name('company.restore');
 
 
-    // Job Applications
-    Route::get('/job-applications', [
-        JobApplicationController::class,
-        'index'
-    ])->name('application.index');
+  Route::resource('job-applications', JobApplicationController::class)
+    ->names([
+        'index'   => 'application.index',
+        'show'    => 'application.show',
+        'edit'    => 'application.edit',
+        'update'  => 'application.update',
+        'destroy' => 'application.destroy',
+    ]);
+
+Route::put(
+    '/job-applications/{id}/restore',
+    [JobApplicationController::class, 'restore']
+)->name('application.restore');
+
 
 
     // Job Categories

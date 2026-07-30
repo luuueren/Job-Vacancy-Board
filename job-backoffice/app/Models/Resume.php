@@ -15,7 +15,7 @@ class Resume extends Model
     // protected $incrementing = false;
        protected $fillable = [
         'fileName',
-        'fileUrl',
+        'fileUri',
         'contactDetails',
         'education',
         'summary',
