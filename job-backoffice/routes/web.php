@@ -94,7 +94,8 @@ Route::put('job-categories/{id}/restore', [JobCategoryController::class, 'restor
             'update' => 'user.update',
             'destroy' => 'user.destroy',
         ]);
-
+Route::put('/users/{id}/restore', [UserController::class, 'restore'])
+    ->name('user.restore');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])

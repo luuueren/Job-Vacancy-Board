@@ -15,7 +15,6 @@
 
                 @csrf
 
-
                 <!-- Category Name -->
                 <div class="mb-6">
 

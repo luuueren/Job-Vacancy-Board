@@ -2,32 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-     /**
+    /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('user.index');
-    }
+        $query = User::query();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        if ($request->boolean('archived')) {
+            $query->onlyTrashed();
+        } else {
+            $query->latest();
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+        $users = $query
+            ->paginate(10)
+            ->onEachSide(1);
+
+        return view('user.index', compact('users'));
     }
 
     /**
@@ -35,7 +33,9 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        return view('user.show', compact('user'));
     }
 
     /**
@@ -43,23 +43,48 @@ class UserController extends Controller
      */
     public function edit(string $id)
     {
-        //
-    }
+        $user = User::findOrFail($id);
 
-    /**
+        return view('user.edit', compact('user'));
+    }    /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UserUpdateRequest $request, string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $user->update($request->validated());
+
+        return redirect()
+            ->route('user.index')
+            ->with('success', 'User updated successfully.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Archive the specified resource.
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $user->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', 'User archived successfully.');
     }
 
+    /**
+     * Restore the specified resource.
+     */
+    public function restore(string $id)
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+
+        $user->restore();
+
+        return redirect()
+            ->route('user.index', ['archived' => true])
+            ->with('success', 'User restored successfully.');
+    }
 }
