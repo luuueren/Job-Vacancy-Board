@@ -20,26 +20,6 @@
 
             </div>
 
-            <div>
-
-                @if (!request()->boolean('archived'))
-                    <a href="{{ route('user.create') }}"
-                        class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-
-                        + Add User
-
-                    </a>
-                @else
-                    <a href="{{ route('user.index') }}"
-                        class="rounded-lg bg-gray-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-700">
-
-                        ← Active Users
-
-                    </a>
-                @endif
-
-            </div>
-
         </div>
 
     </x-slot>
@@ -55,7 +35,6 @@
             </div>
         @endif
 
-        {{-- Card --}}
         <div class="overflow-hidden rounded-xl bg-white shadow">
 
             <div class="flex items-center justify-between border-b bg-gray-50 px-6 py-4">
@@ -112,25 +91,17 @@
                     <tbody class="divide-y divide-gray-200 bg-white">
 
                         @forelse($users as $user)
+
                             <tr class="transition hover:bg-gray-50">
 
                                 {{-- Name --}}
                                 <td class="px-6 py-4">
 
-                                    @if (request()->boolean('archived'))
-                                        <span class="font-semibold text-gray-500">
+                                    <span class="font-semibold text-gray-800">
 
-                                            {{ $user->name }}
+                                        {{ $user->name }}
 
-                                        </span>
-                                    @else
-                                        <a href="{{ route('user.show', $user->id) }}"
-                                            class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
-
-                                            {{ $user->name }}
-
-                                        </a>
-                                    @endif
+                                    </span>
 
                                 </td>
 
@@ -143,13 +114,6 @@
                                 <td class="px-6 py-4">
 
                                     @switch($user->role)
-                                        @case('super-admin')
-                                            <span
-                                                class="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                                                Super Admin
-                                            </span>
-                                        @break
-
                                         @case('admin')
                                             <span
                                                 class="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
@@ -191,44 +155,60 @@
                                 <td class="px-6 py-4 text-right">
 
                                     @if (!request()->boolean('archived'))
-                                        <a href="{{ route('user.edit', $user->id) }}"
-                                            class="mr-5 font-medium text-indigo-600 hover:text-indigo-900">
-                                            ✏️ Edit
-                                        </a>
+                                        @if ($user->role !== 'admin')
+                                            {{-- Edit --}}
+                                            <a href="{{ route('user.edit', $user->id) }}"
+                                                class="mr-5 font-medium text-indigo-600 hover:text-indigo-900">
+                                                ✏️ Edit
+                                            </a>
 
-                                        <form action="{{ route('user.destroy', $user->id) }}" method="POST"
-                                            class="inline">
+                                            {{-- Archive --}}
+                                            <form action="{{ route('user.destroy', $user->id) }}" method="POST"
+                                                class="inline">
 
-                                            @csrf
-                                            @method('DELETE')
+                                                @csrf
+                                                @method('DELETE')
 
-                                            <button type="submit" class="font-medium text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Are you sure you want to archive this user?')">
+                                                <button type="submit"
+                                                    class="font-medium text-red-600 hover:text-red-900"
+                                                    onclick="return confirm('Are you sure you want to archive this user?')">
 
-                                                🗃️ Archive
+                                                    🗃️ Archive
 
-                                            </button>
+                                                </button>
 
-                                        </form>
+                                            </form>
+                                        @else
+                                            <span class="text-sm italic text-gray-400">
+
+                                                Protected Account
+
+                                            </span>
+                                        @endif
                                     @else
-                                        <form action="{{ route('user.restore', $user->id) }}" method="POST"
-                                            class="inline">
+                                        @if ($user->role !== 'admin')
+                                            {{-- Restore --}}
+                                            <form action="{{ route('user.restore', $user->id) }}" method="POST"
+                                                class="inline">
 
-                                            @csrf
-                                            @method('PUT')
+                                                @csrf
+                                                @method('PUT')
 
-                                            <button type="submit"
-                                                class="mr-5 font-medium text-green-600 hover:text-green-900"
-                                                onclick="return confirm('Are you sure you want to restore this user?')">
+                                                <button type="submit"
+                                                    class="mr-5 font-medium text-green-600 hover:text-green-900"
+                                                    onclick="return confirm('Are you sure you want to restore this user?')">
 
-                                                ♻️ Restore
+                                                    ♻️ Restore
 
-                                            </button>
+                                                </button>
 
-                                        </form>
+                                            </form>
+                                        @endif
 
                                         <span class="font-medium text-gray-400">
+
                                             Archived
+
                                         </span>
                                     @endif
 
@@ -247,6 +227,7 @@
                                     </td>
 
                                 </tr>
+
                             @endforelse
 
                         </tbody>
