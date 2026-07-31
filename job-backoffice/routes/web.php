@@ -9,49 +9,61 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (Admin Only)
+|--------------------------------------------------------------------------
+*/
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'role:admin,company-owner'])->group(function () {
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])
         ->name('dashboard');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Companies
+    |--------------------------------------------------------------------------
+    */
 
-    // Companies
-    Route::resource('companies', CompanyController::class)
-        ->names([
-            'index' => 'company.index',
-            'create' => 'company.create',
-            'store' => 'company.store',
-            'show' => 'company.show',
-            'edit' => 'company.edit',
-            'update' => 'company.update',
-            'destroy' => 'company.destroy',
-        ]);
+    Route::resource('companies', CompanyController::class)->names([
+        'index' => 'company.index',
+        'create' => 'company.create',
+        'store' => 'company.store',
+        'show' => 'company.show',
+        'edit' => 'company.edit',
+        'update' => 'company.update',
+        'destroy' => 'company.destroy',
+    ]);
 
     Route::put('/companies/{id}/restore', [CompanyController::class, 'restore'])
         ->name('company.restore');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Job Applications
+    |--------------------------------------------------------------------------
+    */
 
-  Route::resource('job-applications', JobApplicationController::class)
-    ->names([
-        'index'   => 'application.index',
-        'show'    => 'application.show',
-        'edit'    => 'application.edit',
-        'update'  => 'application.update',
+    Route::resource('job-applications', JobApplicationController::class)->names([
+        'index' => 'application.index',
+        'show' => 'application.show',
+        'edit' => 'application.edit',
+        'update' => 'application.update',
         'destroy' => 'application.destroy',
     ]);
 
-Route::put(
-    '/job-applications/{id}/restore',
-    [JobApplicationController::class, 'restore']
-)->name('application.restore');
+    Route::put('/job-applications/{id}/restore', [JobApplicationController::class, 'restore'])
+        ->name('application.restore');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Job Categories
+    |--------------------------------------------------------------------------
+    */
 
-
-    // Job Categories
-Route::resource('job-categories', JobCategoryController::class)
-    ->names([
+    Route::resource('job-categories', JobCategoryController::class)->names([
         'index' => 'category.index',
         'create' => 'category.create',
         'store' => 'category.store',
@@ -61,43 +73,56 @@ Route::resource('job-categories', JobCategoryController::class)
         'destroy' => 'category.destroy',
     ]);
 
-// Restore archived category
-Route::put('job-categories/{id}/restore', [JobCategoryController::class, 'restore'])
-    ->name('category.restore');
+    Route::put('/job-categories/{id}/restore', [JobCategoryController::class, 'restore'])
+        ->name('category.restore');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Job Vacancies
+    |--------------------------------------------------------------------------
+    */
 
-    // Job Vacancies
-    Route::resource('job-vacancies', JobVacancyController::class)
-        ->names([
-            'index' => 'job-vacancy.index',
-            'create' => 'job-vacancy.create',
-            'store' => 'job-vacancy.store',
-            'show' => 'job-vacancy.show',
-            'edit' => 'job-vacancy.edit',
-            'update' => 'job-vacancy.update',
-            'destroy' => 'job-vacancy.destroy',
-        ]);
+    Route::resource('job-vacancies', JobVacancyController::class)->names([
+        'index' => 'job-vacancy.index',
+        'create' => 'job-vacancy.create',
+        'store' => 'job-vacancy.store',
+        'show' => 'job-vacancy.show',
+        'edit' => 'job-vacancy.edit',
+        'update' => 'job-vacancy.update',
+        'destroy' => 'job-vacancy.destroy',
+    ]);
 
     Route::put('/job-vacancies/{id}/restore', [JobVacancyController::class, 'restore'])
         ->name('job-vacancy.restore');
 
+    /*
+    |--------------------------------------------------------------------------
+    | Users
+    |--------------------------------------------------------------------------
+    */
 
+    Route::resource('users', UserController::class)->names([
+        'index' => 'user.index',
+        'create' => 'user.create',
+        'store' => 'user.store',
+        'show' => 'user.show',
+        'edit' => 'user.edit',
+        'update' => 'user.update',
+        'destroy' => 'user.destroy',
+    ]);
 
-    // Users
-    Route::resource('users', UserController::class)
-        ->names([
-            'index' => 'user.index',
-            'create' => 'user.create',
-            'store' => 'user.store',
-            'show' => 'user.show',
-            'edit' => 'user.edit',
-            'update' => 'user.update',
-            'destroy' => 'user.destroy',
-        ]);
     Route::put('/users/{id}/restore', [UserController::class, 'restore'])
-    ->name('user.restore');
+        ->name('user.restore');
+});
 
-    // Profile
+/*
+|--------------------------------------------------------------------------
+| Authenticated Users
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
@@ -108,5 +133,4 @@ Route::put('job-categories/{id}/restore', [JobCategoryController::class, 'restor
         ->name('profile.destroy');
 });
 
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
