@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -38,28 +39,31 @@ class UserController extends Controller
         return view('user.show', compact('user'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        $user = User::findOrFail($id);
+   /**
+ * Show the form for editing the specified resource.
+ */
+public function edit(string $id)
+{
+    $user = User::findOrFail($id);
 
-        return view('user.edit', compact('user'));
-    }    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UserUpdateRequest $request, string $id)
-    {
-        $user = User::findOrFail($id);
+    return view('user.edit', compact('user'));
+}
 
-        $user->update($request->validated());
+/**
+ * Update the specified resource in storage.
+ */
+public function update(UserUpdateRequest $request, string $id)
+{
+    $user = User::findOrFail($id);
 
-        return redirect()
-            ->route('user.index')
-            ->with('success', 'User updated successfully.');
-    }
+    $user->update([
+        'password' => Hash::make($request->password),
+    ]);
 
+    return redirect()
+        ->route('user.index')
+        ->with('success', 'User password updated successfully.');
+}
     /**
      * Archive the specified resource.
      */

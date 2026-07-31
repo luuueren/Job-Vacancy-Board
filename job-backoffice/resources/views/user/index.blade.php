@@ -28,7 +28,8 @@
 
         {{-- Success Message --}}
         @if (session('success'))
-            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-green-700">
+            <div id="success-message"
+                class="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-green-700 transition-opacity duration-500">
 
                 {{ session('success') }}
 
@@ -245,5 +246,28 @@
             </div>
 
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+
+                const successMessage = document.getElementById('success-message');
+
+                if (successMessage) {
+
+                    setTimeout(function() {
+
+                        successMessage.classList.add('opacity-0');
+
+                        setTimeout(function() {
+                            successMessage.remove();
+                        }, 500);
+
+                    }, 3000);
+
+                }
+
+            });
+        </script>
+
 
     </x-app-layout>
