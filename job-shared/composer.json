@@ -1,0 +1,22 @@
+{
+  "name": "job/shared",
+  "description": "this is a shared folder that contains the models",
+  "type": "library",
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^12.0"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "luuueren",
+      "email": "derragaymen@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev"
+}
