@@ -36,7 +36,9 @@ class CompanyUpdateRequest extends FormRequest
             'industry' => 'nullable|string|max:255',
 
             // Owner
-            'owner_name' => 'required|string|max:255',
+            'owner_name' => auth()->user()->role === 'admin'
+                ? 'required|string|max:255'
+                : 'nullable|string|max:255',
         ];
     }
 

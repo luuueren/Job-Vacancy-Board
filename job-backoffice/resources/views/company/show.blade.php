@@ -6,10 +6,14 @@
                 {{ $company->name }}
             </h2>
 
-            <a href="{{ route('company.index') }}"
-                class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
-                ← Back to Companies
-            </a>
+            @if (auth()->user()->role === 'admin')
+                <a href="{{ route('company.index') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-200 transition">
+
+                    ← Back to Companies
+
+                </a>
+            @endif
         </div>
     </x-slot>
 
@@ -115,258 +119,145 @@
             </div>
 
             {{-- Footer --}}
-            <div class="flex flex-wrap justify-end gap-3 px-6 py-5 border-t border-gray-200 bg-gray-50">
+            <div class="flex flex-wrap justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-5">
 
-                <form action="{{ route('company.destroy', $company->id) }}" method="POST">
+                {{-- Archive (Admin Only) --}}
+                @if (auth()->user()->role === 'admin')
+                    <form action="{{ route('company.destroy', $company->id) }}" method="POST">
 
-                    @csrf
-                    @method('DELETE')
+                        @csrf
+                        @method('DELETE')
 
-                    <button onclick="return confirm('Are you sure you want to archive this company?')"
-                        class="inline-flex items-center px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition">
+                        <button type="submit"
+                            onclick="return confirm('Are you sure you want to archive this company?')"
+                            class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 font-medium text-white transition hover:bg-red-700">
 
-                        🗃 Archive
+                            🗃 Archive
 
-                    </button>
+                        </button>
 
-                </form>
+                    </form>
+                @endif
 
-                <a href="{{ route('company.edit', $company->id) }}"
-                    class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition">
+                {{-- Edit --}}
+                <a href="{{ auth()->user()->role === 'admin' ? route('company.edit', $company->id) : route('my-company.edit') }}"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-700">
 
                     ✏ Edit
 
                 </a>
 
-                <a href="{{ route('company.index') }}"
-                    class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition">
+                {{-- Back --}}
+                @if (auth()->user()->role === 'admin')
+                    <a href="{{ route('company.index') }}"
+                        class="inline-flex items-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-300">
 
-                    ← Back
+                        ← Back
 
-                </a>
+                    </a>
+                @endif
 
             </div>
 
         </div>
 
-        {{-- Tabs --}}
-        <div x-data="{ tab: 'jobs' }" class="max-w-6xl mx-auto mt-8">
+        @if (auth()->user()->role === 'admin')
+            {{-- Tabs --}}
+            <div x-data="{ tab: 'jobs' }" class="max-w-6xl mx-auto mt-8">
 
-            <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
+                <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden">
 
-                {{-- Navigation --}}
-                <div class="flex border-b border-gray-200">
+                    {{-- Navigation --}}
+                    <div class="flex border-b border-gray-200">
 
-                    <button @click="tab='jobs'"
-                        :class="tab === 'jobs' ?
-                            'border-indigo-600 text-indigo-600' :
-                            'border-transparent text-gray-500 hover:text-gray-700'"
-                        class="px-6 py-4 border-b-2 font-medium transition">
+                        <button @click="tab='jobs'"
+                            :class="tab === 'jobs' ?
+                                'border-indigo-600 text-indigo-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="px-6 py-4 border-b-2 font-medium transition">
 
-                        Jobs
-                        <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
-                            {{ $company->jobVacancies->count() }}
-                        </span>
+                            Jobs
+                            <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                                {{ $company->jobVacancies->count() }}
+                            </span>
 
-                    </button>
+                        </button>
 
-                    <button @click="tab='applications'"
-                        :class="tab === 'applications' ?
-                            'border-indigo-600 text-indigo-600' :
-                            'border-transparent text-gray-500 hover:text-gray-700'"
-                        class="px-6 py-4 border-b-2 font-medium transition">
+                        <button @click="tab='applications'"
+                            :class="tab === 'applications' ?
+                                'border-indigo-600 text-indigo-600' :
+                                'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="px-6 py-4 border-b-2 font-medium transition">
 
-                        Applications
-                        <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
-                            {{ $applications->count() }}
-                        </span>
+                            Applications
+                            <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                                {{ $applications->count() }}
+                            </span>
 
-                    </button>
-
-                </div>
-
-                {{-- Jobs Tab --}}
-                <div x-show="tab==='jobs'" x-cloak>
-
-                    <div class="overflow-x-auto">
-
-                        <table class="min-w-full divide-y divide-gray-200">
-
-                            <thead class="bg-gray-50">
-
-                                <tr>
-
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Job Title
-                                    </th>
-
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Type
-                                    </th>
-
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Location
-                                    </th>
-
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Actions
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody class="divide-y divide-gray-100 bg-white"></tbody>
-                            @forelse ($company->jobVacancies as $job)
-                                <tr class="hover:bg-gray-50 transition">
-
-                                    <td class="px-6 py-4">
-                                        <div class="font-medium text-gray-900">
-                                            {{ $job->title }}
-                                        </div>
-                                    </td>
-
-                                    <td class="px-6 py-4">
-
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
-
-                                            {{ $job->type }}
-
-                                        </span>
-
-                                    </td>
-
-                                    <td class="px-6 py-4 text-gray-700">
-                                        {{ $job->location }}
-                                    </td>
-
-                                    <td class="px-6 py-4">
-
-                                        <a href="{{ route('job-vacancy.show', $job->id) }}"
-                                            class="text-indigo-600 hover:text-indigo-800 font-medium">
-
-                                            View →
-
-                                        </a>
-
-                                    </td>
-
-                                </tr>
-
-                            @empty
-
-                                <tr>
-
-                                    <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-
-                                        No job vacancies found for this company.
-
-                                    </td>
-
-                                </tr>
-                            @endforelse
-
-                            </tbody>
-
-                        </table>
+                        </button>
 
                     </div>
 
-                </div>
 
-                {{-- Applications Tab --}}
-                <div x-show="tab==='applications'" x-cloak>
+                    {{-- Jobs Tab --}}
+                    <div x-show="tab==='jobs'" x-cloak>
 
-                    <div class="overflow-x-auto">
+                        <div class="overflow-x-auto">
 
-                        <table class="min-w-full divide-y divide-gray-200">
+                            <table class="min-w-full divide-y divide-gray-200">
 
-                            <thead class="bg-gray-50">
+                                <thead class="bg-gray-50">
 
-                                <tr>
+                                    <tr>
 
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Applicant
-                                    </th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Job Title
+                                        </th>
 
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Email
-                                    </th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Type
+                                        </th>
 
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Job
-                                    </th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Location
+                                        </th>
 
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        AI Score
-                                    </th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Actions
+                                        </th>
 
-                                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
-                                        Actions
-                                    </th>
+                                    </tr>
 
-                                </tr>
+                                </thead>
 
-                            </thead>
-
-                            <tbody class="divide-y divide-gray-100 bg-white">
-
-                                @forelse($applications as $application)
+                                <tbody class="divide-y divide-gray-100 bg-white"></tbody>
+                                @forelse ($company->jobVacancies as $job)
                                     <tr class="hover:bg-gray-50 transition">
 
-                                        <td class="px-6 py-4 font-medium text-gray-900">
-
-                                            {{ $application->user->name }}
-
-                                        </td>
-
-                                        <td class="px-6 py-4 text-gray-700">
-
-                                            {{ $application->user->email }}
-
-                                        </td>
-
-                                        <td class="px-6 py-4 text-gray-700">
-
-                                            {{ $application->jobVacancy->title }}
-
+                                        <td class="px-6 py-4">
+                                            <div class="font-medium text-gray-900">
+                                                {{ $job->title }}
+                                            </div>
                                         </td>
 
                                         <td class="px-6 py-4">
 
-                                            @php
-                                                $score = $application->aiGeneratedScore;
-                                            @endphp
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
 
-                                            @if ($score >= 8)
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                                {{ $job->type }}
 
-                                                    {{ $score }}
+                                            </span>
 
-                                                </span>
-                                            @elseif ($score >= 5)
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                                        </td>
 
-                                                    {{ $score }}
-
-                                                </span>
-                                            @else
-                                                <span
-                                                    class="inline-flex items-center px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-
-                                                    {{ $score }}
-
-                                                </span>
-                                            @endif
-
+                                        <td class="px-6 py-4 text-gray-700">
+                                            {{ $job->location }}
                                         </td>
 
                                         <td class="px-6 py-4">
 
-                                            <a href="{{ route('application.show', $application->id) }}"
+                                            <a href="{{ route('job-vacancy.show', $job->id) }}"
                                                 class="text-indigo-600 hover:text-indigo-800 font-medium">
 
                                                 View →
@@ -381,26 +272,150 @@
 
                                     <tr>
 
-                                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
 
-                                            No applications have been submitted yet.
+                                            No job vacancies found for this company.
 
                                         </td>
 
                                     </tr>
                                 @endforelse
 
-                            </tbody>
+                                </tbody>
 
-                        </table>
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                    {{-- Applications Tab --}}
+                    <div x-show="tab==='applications'" x-cloak>
+
+                        <div class="overflow-x-auto">
+
+                            <table class="min-w-full divide-y divide-gray-200">
+
+                                <thead class="bg-gray-50">
+
+                                    <tr>
+
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Applicant
+                                        </th>
+
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Email
+                                        </th>
+
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Job
+                                        </th>
+
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            AI Score
+                                        </th>
+
+                                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                                            Actions
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody class="divide-y divide-gray-100 bg-white">
+
+                                    @forelse($applications as $application)
+                                        <tr class="hover:bg-gray-50 transition">
+
+                                            <td class="px-6 py-4 font-medium text-gray-900">
+
+                                                {{ $application->user->name }}
+
+                                            </td>
+
+                                            <td class="px-6 py-4 text-gray-700">
+
+                                                {{ $application->user->email }}
+
+                                            </td>
+
+                                            <td class="px-6 py-4 text-gray-700">
+
+                                                {{ $application->jobVacancy->title }}
+
+                                            </td>
+
+                                            <td class="px-6 py-4">
+
+                                                @php
+                                                    $score = $application->aiGeneratedScore;
+                                                @endphp
+
+                                                @if ($score >= 8)
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+
+                                                        {{ $score }}
+
+                                                    </span>
+                                                @elseif ($score >= 5)
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+
+                                                        {{ $score }}
+
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="inline-flex items-center px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+
+                                                        {{ $score }}
+
+                                                    </span>
+                                                @endif
+
+                                            </td>
+
+                                            <td class="px-6 py-4">
+
+                                                <a href="{{ route('application.show', $application->id) }}"
+                                                    class="text-indigo-600 hover:text-indigo-800 font-medium">
+
+                                                    View →
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+
+                                                No applications have been submitted yet.
+
+                                            </td>
+
+                                        </tr>
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
 
                     </div>
 
                 </div>
 
             </div>
-
-        </div>
+        @endif
 
     </div>
 

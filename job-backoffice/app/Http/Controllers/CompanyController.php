@@ -111,6 +111,23 @@ class CompanyController extends Controller
 
     return view('company.show', compact('company', 'applications'));
 }
+
+public function showMyCompany()
+{
+    $company = auth()->user()->company;
+
+    if (! $company) {
+        abort(404, 'No company found for this account.');
+    }
+
+    $company->load('jobVacancies');
+
+    $applications = JobApplication::with(['user', 'jobVacancy'])
+        ->whereIn('jobVacancyId', $company->jobVacancies->pluck('id'))
+        ->get();
+
+    return view('company.show', compact('company', 'applications'));
+}
     /**
      * Show the form for editing the specified resource.
      */
@@ -122,6 +139,19 @@ class CompanyController extends Controller
         'company' => $company,
         'industries' => $this->industries,
     ]);
+}
+
+public function editMyCompany()
+{
+    $company = auth()->user()->company;
+
+    if (! $company) {
+        abort(404);
+    }
+
+    $industries = $this->industries;
+
+    return view('company.edit', compact('company', 'industries'));
 }
 
     /**
@@ -150,6 +180,29 @@ class CompanyController extends Controller
 
     return redirect()
         ->route('company.index')
+        ->with('success', 'Company updated successfully.');
+}
+
+public function updateMyCompany(CompanyUpdateRequest $request)
+{
+    $company = auth()->user()->company;
+
+    if (! $company) {
+        abort(404, 'No company found for this account.');
+    }
+
+    $validated = $request->validated();
+
+        $company->update([
+            'name' => $validated['name'],
+            'address' => $validated['address'],
+            'industry' => $validated['industry'],
+            'website' => $validated['website'] ?? null,
+        ]);
+
+
+    return redirect()
+        ->route('my-company.show')
         ->with('success', 'Company updated successfully.');
 }
 
