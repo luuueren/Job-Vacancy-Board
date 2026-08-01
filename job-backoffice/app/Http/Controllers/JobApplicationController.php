@@ -12,26 +12,44 @@ class JobApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        $query = JobApplication::with([
-            'user',
-            'resume',
-            'jobVacancy'
-        ]);
+ public function index(Request $request)
+{
+    $query = JobApplication::with([
+        'user',
+        'resume',
+        'jobVacancy',
+    ]);
 
-        if ($request->boolean('archived')) {
-            $query->onlyTrashed();
-        } else {
-            $query->latest();
-        }
+    // Company Owner: only applications for jobs belonging to his company
+    if (auth()->user()->role === 'company-owner') {
 
-        $jobApplications = $query
-            ->paginate(10)
-            ->onEachSide(1);
+        $company = auth()->user()->company;
 
-        return view('job-application.index', compact('jobApplications'));
+        $query->whereHas('jobVacancy', function ($query) use ($company) {
+
+            $query->where('companyId', $company->id);
+
+        });
+
     }
+
+    // Archived / Active
+    if ($request->boolean('archived')) {
+
+        $query->onlyTrashed();
+
+    } else {
+
+        $query->latest();
+
+    }
+
+    $jobApplications = $query
+        ->paginate(10)
+        ->onEachSide(1);
+
+    return view('job-application.index', compact('jobApplications'));
+}
 
     /**
      * Show the form for creating a new resource.

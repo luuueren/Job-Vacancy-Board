@@ -67,9 +67,12 @@
                             Title
                         </th>
 
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            Company
-                        </th>
+                        @if (auth()->user()->role === 'admin')
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                Company
+                            </th>
+                        @endif
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                             Location
                         </th>
@@ -105,17 +108,21 @@
                                 @endif
                             </td>
 
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @if ($jobVacancy->company)
-                                    <span class="text-sm text-gray-700 font-medium">
-                                        {{ $jobVacancy->company->name }}
-                                    </span>
-                                @else
-                                    <span class="text-sm italic text-gray-400">
-                                        Company not available
-                                    </span>
-                                @endif
-                            </td>
+                            @if (auth()->user()->role === 'admin')
+                                <td class="whitespace-nowrap px-6 py-4">
+
+                                    @if ($jobVacancy->company)
+                                        <span class="text-sm font-medium text-gray-700">
+                                            {{ $jobVacancy->company->name }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm italic text-gray-400">
+                                            Company not available
+                                        </span>
+                                    @endif
+
+                                </td>
+                            @endif
 
                             <td class="px-6 py-4 text-sm text-gray-700">
                                 {{ $jobVacancy->location }}

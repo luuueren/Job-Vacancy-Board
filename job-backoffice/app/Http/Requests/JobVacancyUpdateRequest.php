@@ -10,16 +10,19 @@ class JobVacancyUpdateRequest extends FormRequest
     /**
      * Determine if the user is authorized to make this request.
      */
-     public function rules(): array
+   public function rules(): array
 {
     return [
-        'title' => 'required|string|max:255|',
+        'title' => 'required|string|max:255',
         'description' => 'required|string',
         'location' => 'required|string|max:255',
         'salary' => 'required|numeric|min:0',
-        "type" => 'required|string|max:255',
+        'type' => 'required|string|max:255',
         'jobCategoryId' => 'required|exists:job_categories,id',
-        'companyId' => 'required|exists:companies,id',
+
+        'companyId' => auth()->user()->role === 'admin'
+            ? 'required|exists:companies,id'
+            : 'nullable',
     ];
 }
 

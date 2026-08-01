@@ -64,9 +64,12 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                             Position (Job Vacancy)
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                            Company
-                        </th>
+                        @if (auth()->user()->role === 'admin')
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                Company
+                            </th>
+                        @endif
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
                             Status
                         </th>
@@ -108,9 +111,11 @@
                                 @endif
                             </td>
 
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                {{ $jobApplication->jobVacancy->company->name ?? 'N/A' }}
-                            </td>
+                            @if (auth()->user()->role === 'admin')
+                                <td class="px-6 py-4 text-sm text-gray-700">
+                                    {{ $jobApplication->jobVacancy->company->name ?? 'N/A' }}
+                                </td>
+                            @endif
 
                             <td class="px-6 py-4">
                                 <span

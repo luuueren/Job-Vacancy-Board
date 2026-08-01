@@ -154,96 +154,112 @@
                     {{-- ===================== --}}
                     {{-- Company Owner Card (Admin Only) --}}
                     {{-- ===================== --}}
-                    @if (auth()->user()->role === 'admin')
-                        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
 
-                            <div class="px-6 py-5 bg-gray-50 border-b">
+                        <div class="px-6 py-5 bg-gray-50 border-b">
 
-                                <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                                    👤 Company Owner
-                                </h3>
+                            <h3 class="flex items-center gap-2 text-lg font-semibold text-gray-800">
+                                👤 Company Owner
+                            </h3>
 
-                                <p class="mt-1 text-sm text-gray-500">
-                                    Update the company owner's information.
+                            <p class="mt-1 text-sm text-gray-500">
+                                Update the company owner's information.
+                            </p>
+
+                        </div>
+
+                        <div class="p-6">
+
+                            {{-- Owner Name --}}
+                            <div class="mb-6">
+
+                                <label for="owner_name" class="mb-2 block text-sm font-semibold text-gray-700">
+                                    Owner Name
+                                </label>
+
+                                <input type="text" id="owner_name" name="owner_name"
+                                    value="{{ old('owner_name', $company->owner->name) }}" required
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                                @error('owner_name')
+                                    <p class="mt-2 text-sm text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                @enderror
+
+                            </div>
+
+                            {{-- Owner Email --}}
+                            <div class="mb-6">
+
+                                <label for="owner_email" class="mb-2 block text-sm font-semibold text-gray-700">
+                                    Owner Email
+                                </label>
+
+                                <input type="email" id="owner_email" value="{{ $company->owner->email }}" disabled
+                                    class="w-full cursor-not-allowed rounded-lg border-gray-300 bg-gray-100 text-gray-500 shadow-sm">
+
+                                <p class="mt-2 text-xs text-gray-500">
+                                    The owner's email cannot be changed.
                                 </p>
 
                             </div>
 
-                            <div class="p-6">
+                            {{-- New Password --}}
+                            <div class="mb-6">
 
-                                {{-- Owner Name --}}
-                                <div class="mb-6">
+                                <label for="owner_password" class="mb-2 block text-sm font-semibold text-gray-700">
 
-                                    <label for="owner_name" class="mb-2 block text-sm font-semibold text-gray-700">
-                                        Owner Name
-                                    </label>
+                                    New Password
 
-                                    <input type="text" id="owner_name" name="owner_name"
-                                        value="{{ old('owner_name', $company->owner->name) }}"
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                        required>
+                                    <span class="font-normal text-gray-400">
+                                        (Leave blank to keep the current password)
+                                    </span>
 
-                                    @error('owner_name')
-                                        <p class="mt-2 text-sm text-red-600">
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
+                                </label>
+
+                                <div class="relative">
+
+                                    <input type="password" id="owner_password" name="owner_password"
+                                        class="w-full rounded-lg border-gray-300 pr-12 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                                    <button type="button" id="togglePassword"
+                                        class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 hover:text-indigo-600">
+
+                                        {{-- ضع هنا أيقونة العين الخاصة بك --}}
+                                        ...
+
+                                    </button>
 
                                 </div>
 
-                                {{-- Owner Email --}}
-                                <div class="mb-6">
-
-                                    <label for="owner_email" class="mb-2 block text-sm font-semibold text-gray-700">
-                                        Owner Email
-                                    </label>
-
-                                    <input type="email" id="owner_email" value="{{ $company->owner->email }}"
-                                        disabled
-                                        class="w-full cursor-not-allowed rounded-lg border-gray-300 bg-gray-100 text-gray-500 shadow-sm">
-
-                                    <p class="mt-2 text-xs text-gray-500">
-                                        The owner's email cannot be changed.
+                                @error('owner_password')
+                                    <p class="mt-2 text-sm text-red-600">
+                                        {{ $message }}
                                     </p>
+                                @enderror
 
-                                </div>
+                            </div>
 
-                                {{-- Owner Password --}}
-                                <div>
+                            {{-- Confirm Password --}}
+                            <div>
 
-                                    <label for="owner_password" class="mb-2 block text-sm font-semibold text-gray-700">
-                                        New Password
-                                        <span class="font-normal text-gray-400">
-                                            (Leave blank to keep current password)
-                                        </span>
-                                    </label>
+                                <label for="owner_password_confirmation"
+                                    class="mb-2 block text-sm font-semibold text-gray-700">
 
-                                    <div class="relative">
+                                    Confirm Password
 
-                                        <input type="password" id="owner_password" name="owner_password"
-                                            class="w-full rounded-lg border-gray-300 pr-12 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                </label>
 
-                                        <button type="button" id="togglePassword"
-                                            class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 hover:text-indigo-600">
-
-                                            {{-- SVG كما هو بدون تعديل --}}
-                                            ...
-                                        </button>
-
-                                    </div>
-
-                                    @error('owner_password')
-                                        <p class="mt-2 text-sm text-red-600">
-                                            {{ $message }}
-                                        </p>
-                                    @enderror
-
-                                </div>
+                                <input type="password" id="owner_password_confirmation"
+                                    name="owner_password_confirmation"
+                                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
 
                             </div>
 
                         </div>
-                    @endif
+
+                    </div>
 
                     {{-- Action Buttons --}}
                     <div class="mt-8 flex items-center justify-between pb-6 pl-6 pr-6">

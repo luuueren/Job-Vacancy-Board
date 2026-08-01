@@ -146,12 +146,15 @@ public function editMyCompany()
     $company = auth()->user()->company;
 
     if (! $company) {
-        abort(404);
+        abort(404, 'No company found for this account.');
     }
 
-    $industries = $this->industries;
+    $company->load('owner');
 
-    return view('company.edit', compact('company', 'industries'));
+    return view('company.edit', [
+        'company' => $company,
+        'industries' => $this->industries,
+    ]);
 }
 
     /**
@@ -193,13 +196,27 @@ public function updateMyCompany(CompanyUpdateRequest $request)
 
     $validated = $request->validated();
 
-        $company->update([
-            'name' => $validated['name'],
-            'address' => $validated['address'],
-            'industry' => $validated['industry'],
-            'website' => $validated['website'] ?? null,
+    // Update company information
+    $company->update([
+        'name' => $validated['name'],
+        'address' => $validated['address'],
+        'industry' => $validated['industry'],
+        'website' => $validated['website'] ?? null,
+    ]);
+
+    // Update owner information
+    $company->owner->update([
+        'name' => $validated['owner_name'],
+    ]);
+
+    // Update password only if a new one was provided
+    if (! empty($validated['owner_password'])) {
+
+        $company->owner->update([
+            'password' => Hash::make($validated['owner_password']),
         ]);
 
+    }
 
     return redirect()
         ->route('my-company.show')

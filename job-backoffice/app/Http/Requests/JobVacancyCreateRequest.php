@@ -21,18 +21,20 @@ class JobVacancyCreateRequest extends FormRequest
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-    {
-        return [
-            "title" => 'required|string|max:255',
-            "location" => 'required|string|max:255',
-            "salary" => 'required|numeric|min:0',
-            "type" => 'required|string|max:255',
-            "description" => 'required|string|max:255',
-            "jobCategoryId" => 'required|exists:job_categories,id',
-            "companyId" => 'required|exists:companies,id',
-        ];
+{
+    return [
+        'title' => 'required|string|max:255',
+        'location' => 'required|string|max:255',
+        'salary' => 'required|numeric|min:0',
+        'type' => 'required|string|max:255',
+        'description' => 'required|string|max:255',
+        'jobCategoryId' => 'required|exists:job_categories,id',
 
-    }
+        'companyId' => auth()->user()->role === 'admin'
+            ? 'required|exists:companies,id'
+            : 'nullable',
+    ];
+}
 
     public function messages(): array
     {
@@ -62,10 +64,8 @@ class JobVacancyCreateRequest extends FormRequest
             "jobCategoryId.max" => "The job category may not be greater than 255 characters.",
             "jobCategory.string" => "The job category must be a string.",
 
-            "companyId.required" => "The company is required.",
-            "companyId.exists" => "The selected company is invalid.",
-            "companyId.max" => "The company may not be greater than 255 characters.",
-            "company.string" => "The company must be a string.",
+            'companyId.required' => 'Please select a company.',
+            'companyId.exists' => 'The selected company is invalid.',
         ];
     }
 }

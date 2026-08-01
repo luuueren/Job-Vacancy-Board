@@ -170,23 +170,29 @@
                 {{-- Company Select Dropdown  --}}
                 <div class="mb-6">
 
-                    <label for="companyId" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Company
-                    </label>
+                    @if (auth()->user()->role === 'admin')
 
-                    <select name="companyId" id="companyId"
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <label for="companyId" class="mb-2 block text-sm font-semibold text-gray-700">
+                            Company
+                        </label>
 
-                        <option value="">Select a company</option>
+                        <select name="companyId" id="companyId"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
 
-                        @foreach ($companies as $company)
-                            <option value="{{ $company->id }}"
-                                {{ old('companyId', $jobVacancy->company_id) == $company->id ? 'selected' : '' }}>
-                                {{ $company->name }}
-                            </option>
-                        @endforeach
+                            <option value="">Select a company</option>
 
-                    </select>
+                            @foreach ($companies as $company)
+                                <option value="{{ $company->id }}"
+                                    {{ old('companyId', $jobVacancy->companyId) == $company->id ? 'selected' : '' }}>
+
+                                    {{ $company->name }}
+
+                                </option>
+                            @endforeach
+
+                        </select>
+
+                    @endif
 
                     @error('companyId')
                         <p class="mt-2 text-sm text-red-600">

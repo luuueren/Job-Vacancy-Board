@@ -28,23 +28,36 @@ class JobVacancyController extends Controller
             'Energy',
             'Telecommunications',
         ];
-    public function index(Request $request)
-    {
-         $query = JobVacancy::query();
+  public function index(Request $request)
+{
+    $query = JobVacancy::query();
 
-        // Show archived companies only
-        if ($request->boolean('archived')) {
-            $query->onlyTrashed();
-        } else {
-            $query->latest();
-        }
+    // Company Owner: only jobs belonging to his company
+    if (auth()->user()->role === 'company-owner') {
 
-        $jobVacancies = $query
-            ->paginate(10)
-            ->onEachSide(1);
+        $company = auth()->user()->company;
 
-        return view('job-vacancy.index', compact('jobVacancies'));
+        $query->where('companyId', $company->id);
+
     }
+
+    // Show archived job vacancies only
+    if ($request->boolean('archived')) {
+
+        $query->onlyTrashed();
+
+    } else {
+
+        $query->latest();
+
+    }
+
+    $jobVacancies = $query
+        ->paginate(10)
+        ->onEachSide(1);
+
+    return view('job-vacancy.index', compact('jobVacancies'));
+}
 
     /**
      * Show the form for creating a new resource.
@@ -54,8 +67,11 @@ class JobVacancyController extends Controller
  */
 public function create()
 {
-    $companies = Company::orderBy('name')->get();
     $categories = JobCategory::orderBy('name')->get();
+
+    $companies = auth()->user()->role === 'admin'
+        ? Company::orderBy('name')->get()
+        : collect();
 
     return view('job-vacancy.create', compact('companies', 'categories'));
 }
@@ -65,11 +81,17 @@ public function create()
  */
 public function store(JobVacancyCreateRequest $request)
 {
-    JobVacancy::create($request->validated());
+   $validated = $request->validated();
 
-    return redirect()
-        ->route('job-vacancy.index')
-        ->with('success', 'Job vacancy created successfully.');
+if (auth()->user()->role === 'company-owner') {
+    $validated['companyId'] = auth()->user()->company->id;
+}
+
+JobVacancy::create($validated);
+
+return redirect()
+    ->route('job-vacancy.index')
+    ->with('success', 'Job vacancy created successfully.');
 }
 
     /**
@@ -85,13 +107,21 @@ public function store(JobVacancyCreateRequest $request)
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
-    {
-        $jobVacancy = JobVacancy::findOrFail($id);
-        $companies = Company::orderBy('name')->get();
-        $categories = JobCategory::orderBy('name')->get();
+{
+    $jobVacancy = JobVacancy::findOrFail($id);
 
-        return view('job-vacancy.edit', compact('jobVacancy', 'companies', 'categories'));
-    }
+    $categories = JobCategory::orderBy('name')->get();
+
+    $companies = auth()->user()->role === 'admin'
+        ? Company::orderBy('name')->get()
+        : collect();
+
+    return view('job-vacancy.edit', compact(
+        'jobVacancy',
+        'companies',
+        'categories'
+    ));
+}
 
     /**
      * Update the specified resource in storage.
@@ -99,7 +129,14 @@ public function store(JobVacancyCreateRequest $request)
     public function update(JobVacancyUpdateRequest $request, string $id)
     {
         $jobVacancy = JobVacancy::findOrFail($id);
-        $jobVacancy->update($request->validated());
+        $validated = $request->validated();
+
+        if (auth()->user()->role === 'company-owner') {
+            $validated['companyId'] = $jobVacancy->companyId;
+        }
+
+
+        $jobVacancy->update($validated);
 
         return redirect()
             ->route('job-vacancy.index')

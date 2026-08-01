@@ -17,30 +17,35 @@
                 </h1>
 
                 <p class="mt-2 text-gray-500">
-                    Welcome back, Admin 👋
+                    Welcome back,
+                    {{ auth()->user()->role === 'admin' ? 'Admin' : 'Company Owner' }}
+                    👋
                 </p>
 
             </div>
 
             {{-- Statistics --}}
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div
+                class="grid grid-cols-1 gap-6 {{ auth()->user()->role === 'admin' ? 'md:grid-cols-3' : 'md:grid-cols-2' }}">
 
                 {{-- Active Users --}}
-                <div class="rounded-xl bg-white p-6 shadow">
+                @if (auth()->user()->role === 'admin')
+                    <div class="rounded-xl bg-white p-6 shadow">
 
-                    <p class="text-sm font-medium text-gray-500">
-                        Active Users
-                    </p>
+                        <p class="text-sm font-medium text-gray-500">
+                            Active Users
+                        </p>
 
-                    <h2 class="mt-3 text-4xl font-bold text-indigo-600">
-                        {{ $analytics['activeUsers'] }}
-                    </h2>
+                        <h2 class="mt-3 text-4xl font-bold text-indigo-600">
+                            {{ $analytics['activeUsers'] }}
+                        </h2>
 
-                    <p class="mt-2 text-sm text-gray-400">
-                        Last 30 Days
-                    </p>
+                        <p class="mt-2 text-sm text-gray-400">
+                            Last 30 Days
+                        </p>
 
-                </div>
+                    </div>
+                @endif
 
                 {{-- Active Jobs --}}
                 <div class="rounded-xl bg-white p-6 shadow">
@@ -104,10 +109,12 @@
                                     Job Title
                                 </th>
 
-                                <th
-                                    class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                    Company
-                                </th>
+                                @if (auth()->user()->role === 'admin')
+                                    <th
+                                        class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                        Company
+                                    </th>
+                                @endif
 
                                 <th
                                     class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -127,10 +134,11 @@
                                         {{ $job->title }}
                                     </td>
 
-                                    <td class="px-6 py-4 text-gray-700">
-                                        {{ $job->company?->name ?? 'N/A' }}
-                                    </td>
-
+                                    @if (auth()->user()->role === 'admin')
+                                        <td class="px-6 py-4 text-gray-700">
+                                            {{ $job->company?->name ?? 'N/A' }}
+                                        </td>
+                                    @endif
                                     <td class="px-6 py-4">
                                         <span
                                             class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
@@ -144,7 +152,8 @@
 
                                 <tr>
 
-                                    <td colspan="3" class="px-6 py-8 text-center text-gray-500">
+                                    <td colspan="{{ auth()->user()->role === 'admin' ? 3 : 2 }}"
+                                        class="px-6 py-8 text-center text-gray-500">
 
                                         No job vacancies found.
 
