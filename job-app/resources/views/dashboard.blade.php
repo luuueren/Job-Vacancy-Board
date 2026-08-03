@@ -115,10 +115,6 @@
                                     {{ $job->title }}
                                 </h2>
 
-                                <p class="mt-3 line-clamp-2 text-gray-400">
-                                    {{ \Illuminate\Support\Str::limit($job->description, 150) }}
-                                </p>
-
                                 <div class="mt-5 flex flex-wrap gap-6 text-sm">
 
                                     <div class="text-gray-300">
@@ -174,7 +170,7 @@
 
                         <div class="mt-6 flex justify-end">
 
-                            <a href="#"
+                            <a href="{{ route('job-vacancies.show', $job->id) }}"
                                 class="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition hover:bg-indigo-700">
 
                                 View Details →
