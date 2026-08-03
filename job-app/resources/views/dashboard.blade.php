@@ -23,36 +23,82 @@
             </div>
 
             {{-- Search --}}
-            <div class="flex flex-col md:flex-row gap-4 justify-between mb-8">
+            {{-- Search & Filters --}}
+            <form method="GET" action="{{ route('dashboard') }}" class="mb-10">
 
-                <input type="text" placeholder="Search jobs..."
-                    class="w-full md:w-96 rounded-lg border border-zinc-700 bg-zinc-900 text-white placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500">
+                <div class="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
 
-                <div class="flex gap-2">
+                    <div class="grid gap-4 lg:grid-cols-[1fr_220px_auto]">
 
-                    <button class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700">
-                        All
-                    </button>
+                        {{-- Search --}}
+                        <div>
 
-                    <button class="px-4 py-2 rounded-lg border border-zinc-700 hover:bg-zinc-800">
-                        Full Time
-                    </button>
+                            <label class="mb-2 block text-sm font-medium text-gray-300">
+                                Search
+                            </label>
 
-                    <button class="px-4 py-2 rounded-lg border border-zinc-700 hover:bg-zinc-800">
-                        Contract
-                    </button>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Search by job title, company or location..."
+                                class="w-full rounded-lg border border-zinc-700 bg-black px-4 py-3 text-white placeholder:text-gray-500 focus:border-indigo-500 focus:ring-indigo-500">
 
-                    <button class="px-4 py-2 rounded-lg border border-zinc-700 hover:bg-zinc-800">
-                        Remote
-                    </button>
+                        </div>
 
-                    <button class="px-4 py-2 rounded-lg border border-zinc-700 hover:bg-zinc-800">
-                        Hybrid
-                    </button>
+                        {{-- Job Type --}}
+                        <div>
+
+                            <label class="mb-2 block text-sm font-medium text-gray-300">
+                                Job Type
+                            </label>
+
+                            <select name="type"
+                                class="w-full rounded-lg border border-zinc-700 bg-black px-4 py-3 text-white focus:border-indigo-500 focus:ring-indigo-500">
+
+                                <option value="">All Types</option>
+
+                                <option value="Full-Time" {{ request('type') == 'Full-Time' ? 'selected' : '' }}>
+                                    Full Time
+                                </option>
+
+                                <option value="Contract" {{ request('type') == 'Contract' ? 'selected' : '' }}>
+                                    Contract
+                                </option>
+
+                                <option value="Remote" {{ request('type') == 'Remote' ? 'selected' : '' }}>
+                                    Remote
+                                </option>
+
+                                <option value="Hybrid" {{ request('type') == 'Hybrid' ? 'selected' : '' }}>
+                                    Hybrid
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        {{-- Buttons --}}
+                        <div class="flex items-end gap-2">
+
+                            <button type="submit"
+                                class="rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white hover:bg-indigo-700">
+
+                                Search
+
+                            </button>
+
+                            <a href="{{ route('dashboard') }}"
+                                class="rounded-lg border border-zinc-700 px-6 py-3 text-white hover:bg-zinc-800">
+
+                                Clear
+
+                            </a>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
-            </div>
+            </form>
 
             {{-- Jobs --}}
 
@@ -63,27 +109,62 @@
 
                         <div class="flex justify-between items-start">
 
-                            <div>
+                            <div class="flex-1">
 
-                                <h2 class="text-xl font-bold text-white">
+                                <h2 class="text-2xl font-bold text-white">
                                     {{ $job->title }}
                                 </h2>
 
-                                <p class="mt-1 text-gray-400">
-                                    {{ $job->company?->name }}
+                                <p class="mt-3 line-clamp-2 text-gray-400">
+                                    {{ \Illuminate\Support\Str::limit($job->description, 150) }}
                                 </p>
 
-                                <p class="text-sm text-gray-500">
-                                    {{ $job->location }}
-                                </p>
+                                <div class="mt-5 flex flex-wrap gap-6 text-sm">
 
-                                <p class="mt-4 font-semibold text-green-400">
+                                    <div class="text-gray-300">
+
+                                        🏢 <span class="font-semibold">Company:</span>
+
+                                        {{ $job->company?->name }}
+
+                                    </div>
+
+                                    <div class="text-gray-400">
+
+                                        📍 <span class="font-semibold">Location:</span>
+
+                                        {{ $job->location }}
+
+                                    </div>
+
+                                </div>
+
+                                <p class="mt-5 text-lg font-bold text-green-400">
+
                                     ${{ number_format($job->salary, 2) }}
+
                                 </p>
 
                             </div>
 
-                            <span class="rounded-full bg-indigo-600 px-4 py-1 text-sm">
+                            @php
+
+                                $badge = match ($job->type) {
+                                    'Full-Time' => 'bg-green-600',
+
+                                    'Contract' => 'bg-orange-600',
+
+                                    'Remote' => 'bg-blue-600',
+
+                                    'Hybrid' => 'bg-purple-600',
+
+                                    default => 'bg-gray-600',
+                                };
+
+                            @endphp
+
+                            <span
+                                class="{{ $badge }} self-start rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow">
 
                                 {{ $job->type }}
 
@@ -94,10 +175,9 @@
                         <div class="mt-6 flex justify-end">
 
                             <a href="#"
-                                class="rounded-lg bg-white text-black px-5 py-2 font-semibold hover:bg-gray-200">
+                                class="rounded-lg bg-indigo-600 px-5 py-2 font-semibold text-white transition hover:bg-indigo-700">
 
-                                View Details
-
+                                View Details →
                             </a>
 
                         </div>
