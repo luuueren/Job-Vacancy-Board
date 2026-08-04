@@ -87,7 +87,7 @@
 
                     <div>
 
-                        <a href="#"
+                        <a href="{{ route('job-vacancies.apply', $jobVacancy->id) }}"
                             class="rounded-xl bg-gradient-to-r from-indigo-600 to-pink-500 px-8 py-3 font-semibold text-white transition hover:scale-105">
 
                             Apply Now
