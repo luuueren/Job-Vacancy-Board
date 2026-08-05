@@ -28,12 +28,16 @@ class Resume extends Model
     //     "deleted_at",
     // ];
 
-    protected function casts(): array
-    {
+ protected function casts(): array
+{
         return [
-            'deleted_at' => 'datetime'
+            'deleted_at' => 'datetime',
+            'contactDetails' => 'array',
+            'education' => 'array',
+            'experience' => 'array',
+            'skills' => 'array',
         ];
-    }
+}
 
 public function user(){
         return $this->belongsTo(User::class, "userId", "id");

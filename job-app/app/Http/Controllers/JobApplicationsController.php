@@ -8,6 +8,6 @@ class JobApplicationsController extends Controller
 {
     public function index()
     {
-        return view('job_applications.index');
+        return view('job-applications.index');
     }
 }

@@ -15,10 +15,10 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('fileName');
             $table->string('fileUri');
-            $table->string('contactDetails');
-            $table->longText('education');
-            $table->longText('experience');
-            $table->longText('skills');
+            $table->json('contactDetails');
+            $table->json('education');
+            $table->json('experience');
+            $table->json('skills');
             $table->longText('summary');
             $table->timestamps();
             $table->softDeletes();
