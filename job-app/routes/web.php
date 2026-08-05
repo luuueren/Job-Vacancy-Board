@@ -31,8 +31,12 @@ Route::middleware('auth')->group(function () {
     // TEST OPENAI
     Route::get('/test-openai', [JobVacancyController::class, 'testOpenAI'])->name('test-openai');
 
+    // TEST OPENROUTER
     Route::get('/test-openrouter', [JobVacancyController::class, 'testOpenRouter'])
     ->name('test-openrouter');
+
+    // TEST STORAGE
+    Route::get('/test-storage', [JobVacancyController::class, 'testStorage']);
 });
 
 require __DIR__.'/auth.php';

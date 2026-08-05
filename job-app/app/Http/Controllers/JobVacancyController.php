@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JobVacancy;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use OpenAI\Laravel\Facades\OpenAI;
 use Illuminate\Support\Facades\Http;
 
@@ -70,6 +71,16 @@ public function testOpenRouter()
 //     ]);
 // }
 
+
+public function testStorage()
+{
+    Storage::disk('s3')->put(
+        'test.txt',
+        'Hello from Laravel + Supabase Storage!'
+    );
+
+    return 'File uploaded successfully!';
+}
 
 
 }
