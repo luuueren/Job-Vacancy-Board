@@ -16,8 +16,9 @@ use Throwable;
 class JobVacancyController extends Controller
 {
     public function __construct(
-        private ResumeAnalysisService $resumeAnalysisService
+        ResumeAnalysisService $resumeAnalysisService
     ) {
+        $this->resumeAnalysisService = $resumeAnalysisService;
     }
 
     public function show(string $id)
@@ -48,124 +49,115 @@ class JobVacancyController extends Controller
     }
 
     public function processApplication(ApplyJobRequest $request, string $id)
-    {
-        $jobVacancy = JobVacancy::findOrFail($id);
+{
+    $jobVacancy = JobVacancy::findOrFail($id);
 
-        try {
+    try {
 
-            $resume = null;
+        $resume = null;
 
-            DB::transaction(function () use ($request, $jobVacancy, &$resume) {
+        DB::transaction(function () use ($request, $jobVacancy, &$resume) {
 
-                $alreadyApplied = JobApplication::where('jobVacancyId', $jobVacancy->id)
-                    ->where('userId', auth()->id())
-                    ->lockForUpdate()
-                    ->exists();
+            $alreadyApplied = JobApplication::where('jobVacancyId', $jobVacancy->id)
+                ->where('userId', auth()->id())
+                ->lockForUpdate()
+                ->exists();
 
-                if ($alreadyApplied) {
-                    throw new \RuntimeException('ALREADY_APPLIED');
-                }
-
-                // dd($request->resume_option);
-                if ($request->resume_option === 'existing') {
-
-                    $resume = Resume::where('id', $request->resume_id)
-                        ->where('userId', auth()->id())
-                        ->firstOrFail();
-
-                } else {
-
-                    $file = $request->file('resume_file');
-
-                    $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-
-                    $path = $file->storeAs('resumes', $filename, 's3');
-
-                    if (! $path) {
-                        throw new \RuntimeException('UPLOAD_FAILED');
-                    }
-
-                    $resume = Resume::create([
-                        'fileName' => $file->getClientOriginalName(),
-                        'fileUri' => $path,
-                        'userId' => auth()->id(),
-
-                        'contactDetails' => [
-                            'name' => auth()->user()->name,
-                            'email' => auth()->user()->email,
-                        ],
-
-                        'summary' => '',
-                        'skills' => [],
-                        'experience' => [],
-                        'education' => [],
-                    ]);
-                    // dd($resume);
-                }
-
-                JobApplication::create([
-                    'status' => 'pending',
-                    'jobVacancyId' => $jobVacancy->id,
-                    'userId' => auth()->id(),
-                    'resumeId' => $resume->id,
-                    'aiGeneratedScore' => 0,
-                    'aiGeneratedFeedback' => '',
-                ]);
-                // dd('transaction finished');
-            });
-
-            if (
-                $request->resume_option === 'new' &&
-                $resume &&
-                $resume->fileUri
-            ) {
-                try {
-                    dd('before analysis');
-
-                    $analysis = $this->resumeAnalysisService
-                        ->extractResumeInformation($resume);
-                        // dd($analysis);
-                        dd($resume);
-
-                    $resume->update([
-                        'summary' => $analysis['summary'],
-                        'skills' => $analysis['skills'],
-                        'experience' => $analysis['experience'],
-                        'education' => $analysis['education'],
-                    ]);
-
-                } catch (Throwable $e) {
-
-                    logger()->error(
-                        'Resume analysis failed.',
-                        [
-                            'resume_id' => $resume->id,
-                            'message' => $e->getMessage(),
-                        ]
-                    );
-                }
+            if ($alreadyApplied) {
+                throw new \RuntimeException('ALREADY_APPLIED');
             }
 
-        } catch (\RuntimeException $e) {
+            if ($request->resume_option === 'existing') {
 
-            return match ($e->getMessage()) {
+                $resume = Resume::where('id', $request->resume_id)
+                    ->where('userId', auth()->id())
+                    ->firstOrFail();
 
-                'ALREADY_APPLIED' => redirect()
-                    ->route('job-applications.index')
-                    ->with('info', 'You have already applied for this job.'),
+            } else {
 
-                'UPLOAD_FAILED' => back()
-                    ->withInput()
-                    ->with('error', 'Failed to upload your resume. Please try again.'),
+                $file = $request->file('resume_file');
 
-                default => throw $e,
-            };
+                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+                $path = $file->storeAs('resumes', $filename, 's3');
+
+                if (! $path) {
+                    throw new \RuntimeException('UPLOAD_FAILED');
+                }
+
+                $resume = Resume::create([
+                    'fileName' => $file->getClientOriginalName(),
+                    'fileUri' => $path,
+                    'userId' => auth()->id(),
+
+                    'contactDetails' => [
+                        'name' => auth()->user()->name,
+                        'email' => auth()->user()->email,
+                    ],
+
+                    'summary' => '',
+                    'skills' => [],
+                    'experience' => [],
+                    'education' => [],
+                ]);
+            }
+
+            JobApplication::create([
+                'status' => 'pending',
+                'jobVacancyId' => $jobVacancy->id,
+                'userId' => auth()->id(),
+                'resumeId' => $resume->id,
+                'aiGeneratedScore' => 0,
+                'aiGeneratedFeedback' => '',
+            ]);
+        });
+
+        if (
+            $request->resume_option === 'new' &&
+            $resume &&
+            $resume->fileUri
+        ) {
+            try {
+
+                $analysis = $this->resumeAnalysisService
+                    ->extractResumeInformation($resume);
+
+                $resume->update([
+                    'summary' => $analysis['summary'],
+                    'skills' => $analysis['skills'],
+                    'experience' => $analysis['experience'],
+                    'education' => $analysis['education'],
+                ]);
+
+            } catch (\Throwable $e) {
+
+                logger()->error('Resume analysis failed.', [
+                    'resume_id' => $resume->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return redirect()
-            ->route('job-applications.index')
-            ->with('success', 'Your application has been submitted successfully.');
+    } catch (\RuntimeException $e) {
+
+        return match ($e->getMessage()) {
+
+            'ALREADY_APPLIED' => redirect()
+                ->route('job-applications.index')
+                ->with('info', 'You have already applied for this job.'),
+
+            'UPLOAD_FAILED' => back()
+                ->withInput()
+                ->with('error', 'Failed to upload your resume. Please try again.'),
+
+            default => throw $e,
+        };
     }
+
+    return redirect()
+        ->route('job-applications.index')
+        ->with('success', 'Your application has been submitted successfully.');
+}
 
     public function testOpenRouter()
     {

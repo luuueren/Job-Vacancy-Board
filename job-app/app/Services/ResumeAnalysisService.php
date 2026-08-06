@@ -11,20 +11,32 @@ use Smalot\PdfParser\Parser;
 class ResumeAnalysisService
 {
     /**
+     * الحد الأقصى لعدد الأحرف المُرسلة إلى النموذج
+     * (لتفادي تجاوز حد الـ tokens في السير الذاتية الطويلة جدًا).
+     */
+    private const MAX_TEXT_LENGTH = 15000;
+
+    /**
      * Extract structured information from a resume.
      */
     public function extractResumeInformation(Resume $resume): array
     {
-        dd($resume);
+        $storagePath = $resume->fileUri;
 
-        $fileUrl = Storage::disk('s3')->url($resume->fileUri);
-
-        $rawText = $this->extractTextFromPdf($fileUrl);
+        $rawText = $this->extractTextFromPdf($storagePath);
+        // dd($rawText);
 
         Log::info('Resume text extracted successfully.', [
             'resume_id' => $resume->id,
             'length' => strlen($rawText),
         ]);
+
+
+        if (trim($rawText) === '') {
+            throw new \RuntimeException('No extractable text found in resume PDF.');
+        }
+
+        $cleanText = $this->sanitizeText($rawText);
 
         $response = OpenAI::chat()->create([
             'model' => 'openai/gpt-oss-20b:free',
@@ -58,7 +70,7 @@ PROMPT
 
                 [
                     'role' => 'user',
-                    'content' => $rawText,
+                    'content' => $cleanText,
                 ],
 
             ],
@@ -68,7 +80,7 @@ PROMPT
 
         $analysis = json_decode($content, true);
 
-        if (!is_array($analysis)) {
+        if (! is_array($analysis)) {
 
             Log::error('Failed to decode AI response.', [
                 'response' => $content,
@@ -89,46 +101,63 @@ PROMPT
     /**
      * Extract plain text from a PDF file stored on S3.
      */
-    private function extractTextFromPdf(string $fileUrl): string
+    private function extractTextFromPdf(string $storagePath): string
     {
-        $tempFile = tempnam(sys_get_temp_dir(), 'resume_');
-
-        $filePath = parse_url($fileUrl, PHP_URL_PATH);
-
-        if (!$filePath) {
-            throw new \RuntimeException('Invalid file URL.');
-        }
-
-        $filename = basename($filePath);
-
-        $storagePath = "resumes/{$filename}";
-
-        if (!Storage::disk('s3')->exists($storagePath)) {
+        if (! Storage::disk('s3')->exists($storagePath)) {
             throw new \RuntimeException('Resume file not found.');
         }
 
-        $pdfContent = Storage::disk('s3')->get($storagePath);
+        try {
+            $pdfContent = Storage::disk('s3')->get($storagePath);
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Failed to read resume file: ' . $e->getMessage());
+        }
 
-        if (!$pdfContent) {
+        if ($pdfContent === null || $pdfContent === false || $pdfContent === '') {
             throw new \RuntimeException('Failed to read resume file.');
         }
 
-        file_put_contents($tempFile, $pdfContent);
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'resume_');
+        $tempFilePdf = $tempFile . '.pdf';
+        rename($tempFile, $tempFilePdf);
+
+        file_put_contents($tempFilePdf, $pdfContent);
 
         try {
 
             $parser = new Parser();
 
-            $pdf = $parser->parseFile($tempFile);
+            $pdf = $parser->parseFile($tempFilePdf);
 
             return trim($pdf->getText());
 
+        } catch (\Throwable $e) {
+
+            throw new \RuntimeException('Failed to parse resume PDF: ' . $e->getMessage());
+
         } finally {
 
-            if (file_exists($tempFile)) {
-                unlink($tempFile);
+            if (file_exists($tempFilePdf)) {
+                unlink($tempFilePdf);
             }
 
         }
+    }
+
+
+    private function sanitizeText(string $text): string
+    {
+        $clean = @iconv('UTF-8', 'UTF-8//IGNORE', $text);
+
+        if ($clean === false) {
+            $clean = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+        }
+
+        if (mb_strlen($clean) > self::MAX_TEXT_LENGTH) {
+            $clean = mb_substr($clean, 0, self::MAX_TEXT_LENGTH);
+        }
+
+        return $clean;
     }
 }
