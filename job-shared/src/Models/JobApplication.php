@@ -29,7 +29,8 @@ class JobApplication extends Model
     protected function casts(): array
     {
         return [
-            'deleted_at' => 'datetime'
+            'deleted_at' => 'datetime',
+            'aiGeneratedScore' => 'integer',
         ];
     }
 

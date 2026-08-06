@@ -76,13 +76,16 @@ PROMPT
             ],
         ]);
 
-        $content = trim($response->choices[0]->message->content);
+        $content = $this->cleanJsonResponse(
+            $response->choices[0]->message->content
+        );
 
         $analysis = json_decode($content, true);
 
         if (! is_array($analysis)) {
 
             Log::error('Failed to decode AI response.', [
+                'resume_id' => $resume->id,
                 'response' => $content,
             ]);
 
@@ -160,4 +163,19 @@ PROMPT
 
         return $clean;
     }
+
+    /**
+ * Clean the AI response before decoding JSON.
+ */
+private function cleanJsonResponse(string $content): string
+{
+    $content = trim($content);
+
+    if (str_starts_with($content, '```')) {
+        $content = preg_replace('/^```(?:json)?/i', '', $content);
+        $content = preg_replace('/```$/', '', $content);
+    }
+
+    return trim($content);
+}
 }

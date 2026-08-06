@@ -7,6 +7,7 @@ use App\Models\JobApplication;
 use App\Models\JobVacancy;
 use App\Models\Resume;
 use App\Services\ResumeAnalysisService;
+use App\Services\ResumeMatchingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,11 +16,11 @@ use Throwable;
 
 class JobVacancyController extends Controller
 {
-    public function __construct(
-        ResumeAnalysisService $resumeAnalysisService
-    ) {
-        $this->resumeAnalysisService = $resumeAnalysisService;
-    }
+   public function __construct(
+    private ResumeAnalysisService $resumeAnalysisService,
+    private ResumeMatchingService $resumeMatchingService,
+) {
+}
 
     public function show(string $id)
     {
@@ -54,9 +55,15 @@ class JobVacancyController extends Controller
 
     try {
 
-        $resume = null;
+            $resume = null;
+            $jobApplication = null;
 
-        DB::transaction(function () use ($request, $jobVacancy, &$resume) {
+        DB::transaction(function () use (
+    $request,
+    $jobVacancy,
+    &$resume,
+    &$jobApplication
+) {
 
             $alreadyApplied = JobApplication::where('jobVacancyId', $jobVacancy->id)
                 ->where('userId', auth()->id())
@@ -102,40 +109,64 @@ class JobVacancyController extends Controller
                 ]);
             }
 
-            JobApplication::create([
-                'status' => 'pending',
-                'jobVacancyId' => $jobVacancy->id,
-                'userId' => auth()->id(),
-                'resumeId' => $resume->id,
-                'aiGeneratedScore' => 0,
-                'aiGeneratedFeedback' => '',
-            ]);
+                $jobApplication = JobApplication::create([
+                    'status' => 'pending',
+                    'jobVacancyId' => $jobVacancy->id,
+                    'userId' => auth()->id(),
+                    'resumeId' => $resume->id,
+                    'aiGeneratedScore' => 0,
+                    'aiGeneratedFeedback' => '',
+                ]);
         });
 
-        if (
-            $request->resume_option === 'new' &&
-            $resume &&
-            $resume->fileUri
-        ) {
+        if ($resume && $resume->fileUri) {
             try {
 
-                $analysis = $this->resumeAnalysisService
-                    ->extractResumeInformation($resume);
+                if (empty($resume->summary)) {
 
-                $resume->update([
-                    'summary' => $analysis['summary'],
-                    'skills' => $analysis['skills'],
-                    'experience' => $analysis['experience'],
-                    'education' => $analysis['education'],
-                ]);
+                        $analysis = $this->resumeAnalysisService
+                            ->extractResumeInformation($resume);
+
+                        $resume->update([
+                            'summary' => $analysis['summary'],
+                            'skills' => $analysis['skills'],
+                            'experience' => $analysis['experience'],
+                            'education' => $analysis['education'],
+                        ]);
+
+                        $resume->refresh();
+                    }
+
+
+                    $matching = $this->resumeMatchingService
+                        ->analyze($resume, $jobVacancy);
+
+                    if ($jobApplication) {
+                        $jobApplication->update([
+                            'aiGeneratedScore' => $matching['score'],
+                            'aiGeneratedFeedback' => $matching['feedback'],
+                        ]);
+                    }
+
 
             } catch (\Throwable $e) {
 
-                logger()->error('Resume analysis failed.', [
-                    'resume_id' => $resume->id,
-                    'message' => $e->getMessage(),
-                ]);
-            }
+                    logger()->error('Resume analysis or matching failed.', [
+                        'resume_id' => $resume->id,
+                        'job_application_id' => $jobApplication?->id,
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+
+    if ($jobApplication) {
+                        $jobApplication->update([
+                            'aiGeneratedScore' => 0,
+                            'aiGeneratedFeedback' => 'AI analysis is temporarily unavailable. Please try again later.',
+                        ]);
+                    }
+
+                }
+
         }
 
     } catch (\RuntimeException $e) {
